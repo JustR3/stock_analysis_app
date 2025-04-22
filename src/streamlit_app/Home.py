@@ -1,11 +1,12 @@
 import streamlit as st
 import pandas as pd
-import yfinance as yf
 from datetime import datetime, timedelta
 from utils.config_manager import ConfigManager
+from utils.data_service import StreamlitDataService
 
-# Initialize configuration
+# Initialize configuration and data service
 config = ConfigManager()
+data_service = StreamlitDataService()
 
 # Page config
 st.set_page_config(
@@ -39,14 +40,16 @@ with col2:
 # Main content
 if symbol:
     try:
-        # Fetch stock data with configured timeout and retries
-        stock = yf.Ticker(symbol)
-        hist = stock.history(start=start_date, end=end_date)
+        # Fetch stock data using the data service
+        data, info = data_service.get_stock_data(
+            symbol,
+            start_date=start_date.strftime('%Y-%m-%d'),
+            end_date=end_date.strftime('%Y-%m-%d')
+        )
         
-        if not hist.empty:
+        if not data.empty:
             # Display basic info
             st.subheader(f"Basic Information for {symbol}")
-            info = stock.info
             col1, col2, col3 = st.columns(3)
             
             with col1:
@@ -59,16 +62,26 @@ if symbol:
             # Price chart with configured height
             st.subheader("Price History")
             st.line_chart(
-                hist['Close'],
+                data['Close'],
                 height=config.get("visualization.chart_height", 400)
             )
             
             # Volume chart
             st.subheader("Trading Volume")
             st.bar_chart(
-                hist['Volume'],
+                data['Volume'],
                 height=config.get("visualization.chart_height", 400)
             )
+            
+            # Additional metrics
+            st.subheader("Performance Metrics")
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric("Daily Return", f"{data['daily_return'].iloc[-1]:.2%}")
+            with col2:
+                st.metric("Volatility", f"{data['volatility'].iloc[-1]:.2%}")
+            with col3:
+                st.metric("20-day MA", f"${data['MA_20'].iloc[-1]:.2f}")
             
         else:
             st.error(f"No data found for symbol {symbol}")

@@ -4,8 +4,8 @@ from datetime import datetime, timedelta
 import os
 import json
 from typing import Dict, Optional
-from data_collector import StockDataCollector
-from stock_analyzer import StockAnalyzer
+from .data_collector import StockDataCollector
+from .stock_analyzer import StockAnalyzer
 import logging
 
 logger = logging.getLogger(__name__)

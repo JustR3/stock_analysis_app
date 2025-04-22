@@ -1,12 +1,12 @@
 import streamlit as st
 import pandas as pd
-import yfinance as yf
-import ta
 from datetime import datetime, timedelta
 from utils.config_manager import ConfigManager
+from utils.data_service import StreamlitDataService
 
-# Initialize configuration
+# Initialize configuration and data service
 config = ConfigManager()
+data_service = StreamlitDataService()
 
 st.set_page_config(
     page_title="Technical Analysis",
@@ -27,73 +27,70 @@ period = st.sidebar.selectbox(
 
 if symbol:
     try:
-        # Fetch data
-        stock = yf.Ticker(symbol)
-        hist = stock.history(period=period)
+        # Calculate start date based on period
+        end_date = datetime.now()
+        if period == "1mo":
+            start_date = end_date - timedelta(days=30)
+        elif period == "3mo":
+            start_date = end_date - timedelta(days=90)
+        elif period == "6mo":
+            start_date = end_date - timedelta(days=180)
+        elif period == "1y":
+            start_date = end_date - timedelta(days=365)
+        elif period == "2y":
+            start_date = end_date - timedelta(days=730)
+        elif period == "5y":
+            start_date = end_date - timedelta(days=1825)
+        else:  # max
+            start_date = end_date - timedelta(days=3650)
+            
+        # Fetch data using the data service
+        data, _ = data_service.get_stock_data(
+            symbol,
+            start_date=start_date.strftime('%Y-%m-%d'),
+            end_date=end_date.strftime('%Y-%m-%d')
+        )
         
-        if not hist.empty:
-            # Calculate technical indicators with configured parameters
-            # RSI
-            rsi_period = config.get("technical_analysis.indicators.rsi.period", 14)
-            hist['RSI'] = ta.momentum.RSIIndicator(hist['Close'], window=rsi_period).rsi()
-            
-            # MACD
-            macd_fast = config.get("technical_analysis.indicators.macd.fast_period", 12)
-            macd_slow = config.get("technical_analysis.indicators.macd.slow_period", 26)
-            macd_signal = config.get("technical_analysis.indicators.macd.signal_period", 9)
-            macd = ta.trend.MACD(
-                hist['Close'],
-                window_fast=macd_fast,
-                window_slow=macd_slow,
-                window_sign=macd_signal
-            )
-            hist['MACD'] = macd.macd()
-            hist['MACD_Signal'] = macd.macd_signal()
-            
-            # Bollinger Bands
-            bb_period = config.get("technical_analysis.indicators.bollinger_bands.period", 20)
-            bb_std = config.get("technical_analysis.indicators.bollinger_bands.std_dev", 2)
-            bollinger = ta.volatility.BollingerBands(
-                hist['Close'],
-                window=bb_period,
-                window_dev=bb_std
-            )
-            hist['BB_Upper'] = bollinger.bollinger_hband()
-            hist['BB_Lower'] = bollinger.bollinger_lband()
+        if not data.empty:
+            # Calculate technical indicators
+            indicators = data_service.get_technical_indicators(data)
             
             # Display charts with configured height
             chart_height = config.get("visualization.chart_height", 400)
             
             st.subheader("Price and Bollinger Bands")
             st.line_chart(
-                hist[['Close', 'BB_Upper', 'BB_Lower']],
+                pd.concat([
+                    data['Close'],
+                    indicators[['BB_Upper', 'BB_Middle', 'BB_Lower']]
+                ], axis=1),
                 height=chart_height
             )
             
             st.subheader("RSI (Relative Strength Index)")
             st.line_chart(
-                hist['RSI'],
+                indicators['RSI'],
                 height=chart_height
             )
             
             st.subheader("MACD (Moving Average Convergence Divergence)")
             st.line_chart(
-                hist[['MACD', 'MACD_Signal']],
+                indicators[['MACD', 'MACD_Signal']],
                 height=chart_height
             )
             
             # Display current values with overbought/oversold levels
             col1, col2, col3 = st.columns(3)
             with col1:
-                rsi_value = hist['RSI'].iloc[-1]
+                rsi_value = indicators['RSI'].iloc[-1]
                 # Use 'normal' for overbought (red), 'inverse' for oversold (green), 'off' for neutral
                 rsi_color = "normal" if rsi_value > config.get("technical_analysis.indicators.rsi.overbought", 70) else \
                            "inverse" if rsi_value < config.get("technical_analysis.indicators.rsi.oversold", 30) else "off"
                 st.metric("Current RSI", f"{rsi_value:.2f}", delta_color=rsi_color)
             with col2:
-                st.metric("MACD", f"{hist['MACD'].iloc[-1]:.2f}")
+                st.metric("MACD", f"{indicators['MACD'].iloc[-1]:.2f}")
             with col3:
-                st.metric("MACD Signal", f"{hist['MACD_Signal'].iloc[-1]:.2f}")
+                st.metric("MACD Signal", f"{indicators['MACD_Signal'].iloc[-1]:.2f}")
                 
         else:
             st.error(f"No data found for symbol {symbol}")
