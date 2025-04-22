@@ -2,24 +2,26 @@ import streamlit as st
 import pandas as pd
 import yfinance as yf
 from datetime import datetime, timedelta
+from utils.config_manager import ConfigManager
+
+# Initialize configuration
+config = ConfigManager()
 
 # Page config
 st.set_page_config(
-    page_title="Stock Analysis App",
+    page_title=config.get("app.name"),
     page_icon="📈",
     layout="wide"
 )
 
 # Title and description
-st.title("Stock Analysis Dashboard")
-st.markdown("""
-    This dashboard provides comprehensive stock analysis tools and visualizations.
-    Select a stock symbol to begin your analysis.
-""")
+st.title(config.get("app.name"))
+st.markdown(config.get("app.description"))
 
 # Sidebar
 st.sidebar.header("Stock Selection")
-symbol = st.sidebar.text_input("Enter Stock Symbol", "AAPL").upper()
+default_symbol = config.get("data.default_symbol", "AAPL")
+symbol = st.sidebar.text_input("Enter Stock Symbol", default_symbol).upper()
 
 # Date range selection
 col1, col2 = st.sidebar.columns(2)
@@ -37,7 +39,7 @@ with col2:
 # Main content
 if symbol:
     try:
-        # Fetch stock data
+        # Fetch stock data with configured timeout and retries
         stock = yf.Ticker(symbol)
         hist = stock.history(start=start_date, end=end_date)
         
@@ -54,13 +56,19 @@ if symbol:
             with col3:
                 st.metric("52 Week High", f"${info.get('fiftyTwoWeekHigh', 'N/A')}")
             
-            # Price chart
+            # Price chart with configured height
             st.subheader("Price History")
-            st.line_chart(hist['Close'])
+            st.line_chart(
+                hist['Close'],
+                height=config.get("visualization.chart_height", 400)
+            )
             
             # Volume chart
             st.subheader("Trading Volume")
-            st.bar_chart(hist['Volume'])
+            st.bar_chart(
+                hist['Volume'],
+                height=config.get("visualization.chart_height", 400)
+            )
             
         else:
             st.error(f"No data found for symbol {symbol}")
