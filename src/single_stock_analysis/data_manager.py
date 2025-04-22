@@ -90,11 +90,12 @@ class StockDataManager:
         
         # Check if we can use cached data
         if not force_refresh and os.path.exists(cache_path) and self._is_cache_valid(ticker):
-            logger.info(f"Loading cached data for {ticker}")
+            logger.info(f"Using cached data for {ticker} from {cache_path}")
+            logger.info("Cache is valid and less than 1 day old")
             return pd.read_parquet(cache_path)
             
         # Fetch new data
-        logger.info(f"Fetching new data for {ticker}")
+        logger.info(f"Cache not found or invalid for {ticker}. Fetching new data...")
         end_date = datetime.now().strftime('%Y-%m-%d')
         start_date = (datetime.now() - timedelta(days=5*365)).strftime('%Y-%m-%d')
         
@@ -103,9 +104,11 @@ class StockDataManager:
             raise ValueError(f"No data found for {ticker}")
             
         # Enrich data with analysis parameters
+        logger.info("Enriching data with analysis parameters...")
         data = self._enrich_data(data)
         
         # Save to cache
+        logger.info(f"Saving data to cache at {cache_path}")
         data.to_parquet(cache_path)
         self._save_metadata(ticker, {
             'last_update': datetime.now().isoformat(),
