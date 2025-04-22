@@ -1,7 +1,8 @@
 import pandas as pd
 import numpy as np
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 import logging
+import scipy.stats as stats
 
 logger = logging.getLogger(__name__)
 
@@ -28,19 +29,23 @@ class StockAnalyzer:
         Calculate returns for the specified period.
         
         Args:
-            period (str): 'daily', 'weekly', or 'monthly'
+            period (str): 'daily' or 'monthly'
             
         Returns:
             pd.Series: Returns series
         """
+        # Ensure index is datetime
+        if not isinstance(self.data.index, pd.DatetimeIndex):
+            self.data.index = pd.to_datetime(self.data.index)
+            
         if period == 'daily':
             return self.data['Close'].pct_change()
-        elif period == 'weekly':
-            return self.data['Close'].resample('W').last().pct_change()
         elif period == 'monthly':
-            return self.data['Close'].resample('M').last().pct_change()
+            # Resample to monthly frequency and calculate returns
+            monthly_data = self.data['Close'].resample('ME').last()
+            return monthly_data.pct_change()
         else:
-            raise ValueError("Period must be 'daily', 'weekly', or 'monthly'")
+            raise ValueError("Period must be 'daily' or 'monthly'")
     
     def calculate_volatility(self, window: int = 252) -> pd.Series:
         """
@@ -84,5 +89,141 @@ class StockAnalyzer:
             'volatility': self.calculate_volatility().iloc[-1],
             'current_price': self.data['Close'].iloc[-1],
             'price_change_1d': self.data['Close'].pct_change().iloc[-1],
-            'volume_avg': self.data['Volume'].mean()
-        } 
+            'volume_avg': self.data['Volume'].mean(),
+            'skewness': returns.skew(),
+            'kurtosis': returns.kurtosis()
+        }
+
+    def get_returns_confidence_intervals(self, period: str = 'daily', confidence: float = 0.95) -> Dict:
+        """
+        Calculate confidence intervals for returns.
+        
+        Args:
+            period (str): 'daily' or 'monthly'
+            confidence (float): Confidence level (0-1)
+            
+        Returns:
+            Dict: Dictionary containing confidence intervals
+        """
+        returns = self.calculate_returns(period)
+        mean = returns.mean()
+        std = returns.std()
+        z_score = stats.norm.ppf((1 + confidence) / 2)
+        
+        return {
+            'lower_bound': mean - z_score * std,
+            'upper_bound': mean + z_score * std,
+            'confidence_level': confidence
+        }
+
+    def calculate_var(self, confidence_level: float = 0.95, method: str = 'historical') -> float:
+        """
+        Calculate Value at Risk (VaR).
+        
+        Args:
+            confidence_level (float): Confidence level (0-1)
+            method (str): 'historical' or 'parametric'
+            
+        Returns:
+            float: Value at Risk
+        """
+        returns = self.calculate_returns()
+        if method == 'historical':
+            return np.percentile(returns, (1 - confidence_level) * 100)
+        elif method == 'parametric':
+            mean = returns.mean()
+            std = returns.std()
+            return mean + stats.norm.ppf(1 - confidence_level) * std
+        else:
+            raise ValueError("Method must be 'historical' or 'parametric'")
+
+    def calculate_cvar(self, confidence_level: float = 0.95) -> float:
+        """
+        Calculate Conditional Value at Risk (CVaR).
+        
+        Args:
+            confidence_level (float): Confidence level (0-1)
+            
+        Returns:
+            float: Conditional Value at Risk
+        """
+        returns = self.calculate_returns()
+        var = self.calculate_var(confidence_level)
+        return returns[returns <= var].mean()
+
+    def calculate_beta(self, market_returns: pd.Series) -> float:
+        """
+        Calculate beta coefficient relative to market returns.
+        
+        Args:
+            market_returns (pd.Series): Market returns series
+            
+        Returns:
+            float: Beta coefficient
+        """
+        stock_returns = self.calculate_returns()
+        covariance = np.cov(stock_returns, market_returns)[0][1]
+        market_variance = np.var(market_returns)
+        return covariance / market_variance
+
+    def calculate_information_ratio(self, benchmark_returns: pd.Series) -> float:
+        """
+        Calculate Information Ratio.
+        
+        Args:
+            benchmark_returns (pd.Series): Benchmark returns series
+            
+        Returns:
+            float: Information Ratio
+        """
+        excess_returns = self.calculate_returns() - benchmark_returns
+        return np.sqrt(252) * excess_returns.mean() / excess_returns.std()
+
+    def get_advanced_statistics(self, market_returns: Optional[pd.Series] = None) -> Dict:
+        """
+        Calculate advanced statistical measures.
+        
+        Args:
+            market_returns (Optional[pd.Series]): Market returns for beta calculation
+            
+        Returns:
+            Dict: Dictionary of advanced statistics
+        """
+        stats_dict = {
+            'var_95': self.calculate_var(0.95),
+            'cvar_95': self.calculate_cvar(0.95),
+            'var_99': self.calculate_var(0.99),
+            'cvar_99': self.calculate_cvar(0.99),
+            'sortino_ratio': self._calculate_sortino_ratio(),
+            'calmar_ratio': self._calculate_calmar_ratio(),
+            'omega_ratio': self._calculate_omega_ratio()
+        }
+        
+        if market_returns is not None:
+            stats_dict.update({
+                'beta': self.calculate_beta(market_returns),
+                'information_ratio': self.calculate_information_ratio(market_returns)
+            })
+            
+        return stats_dict
+
+    def _calculate_sortino_ratio(self, risk_free_rate: float = 0.0) -> float:
+        """Calculate Sortino Ratio."""
+        returns = self.calculate_returns()
+        excess_returns = returns - risk_free_rate/252
+        downside_returns = excess_returns[excess_returns < 0]
+        downside_std = np.sqrt(np.mean(downside_returns**2))
+        return np.sqrt(252) * excess_returns.mean() / downside_std
+
+    def _calculate_calmar_ratio(self) -> float:
+        """Calculate Calmar Ratio."""
+        returns = self.calculate_returns()
+        max_drawdown = (self.data['Close'] / self.data['Close'].cummax() - 1).min()
+        return np.sqrt(252) * returns.mean() / abs(max_drawdown)
+
+    def _calculate_omega_ratio(self, threshold: float = 0.0) -> float:
+        """Calculate Omega Ratio."""
+        returns = self.calculate_returns()
+        gains = returns[returns > threshold].sum()
+        losses = abs(returns[returns <= threshold].sum())
+        return gains / losses if losses != 0 else float('inf') 
