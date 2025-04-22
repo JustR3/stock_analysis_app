@@ -1,9 +1,14 @@
 # Stock Analysis App
 
-A Python application for stock market analysis, visualization, and prediction. The app provides tools for collecting, analyzing, and visualizing stock data, with a focus on single stock analysis.
+A Python application for stock market analysis, visualization, and prediction. The app provides tools for collecting, analyzing, and visualizing stock data, with a focus on single stock analysis. Now with a modern Streamlit web interface!
 
 ## Features
 
+- **Interactive Web Interface**:
+  - Modern, responsive Streamlit dashboard
+  - Real-time stock data visualization
+  - Technical analysis indicators
+  - Configurable settings
 - **Data Collection**: Fetch historical stock data using yfinance
 - **Data Management**: Efficient caching system for stock data
 - **Analysis Tools**:
@@ -11,10 +16,11 @@ A Python application for stock market analysis, visualization, and prediction. T
   - Volatility analysis
   - Moving averages
   - Summary statistics
+  - Technical indicators (RSI, MACD, Bollinger Bands)
 - **Visualization**:
-  - Price and moving averages plots
-  - Returns distribution analysis
-  - Professional seaborn styling
+  - Interactive price charts
+  - Technical indicator plots
+  - Professional styling
 - **Trading Strategies**:
   - Momentum-based trading signals
 - **Price Prediction**:
@@ -27,16 +33,26 @@ A Python application for stock market analysis, visualization, and prediction. T
 ```
 stock_analysis_app/
 ├── src/
-│   └── single_stock_analysis/
-│       ├── data_collector.py    # Data fetching from yfinance
-│       ├── data_manager.py      # Data caching and management
-│       ├── stock_analyzer.py    # Analysis tools
-│       ├── visualizer.py        # Plotting functions
-│       ├── example.py           # Usage examples
-│       ├── strategies/          # Trading strategies
-│       │   └── momentum.py
-│       └── prediction/          # Price prediction
-│           └── predictor.py
+│   ├── single_stock_analysis/    # Core analysis modules
+│   │   ├── data_collector.py    # Data fetching from yfinance
+│   │   ├── data_manager.py      # Data caching and management
+│   │   ├── stock_analyzer.py    # Analysis tools
+│   │   ├── visualizer.py        # Plotting functions
+│   │   ├── strategies/          # Trading strategies
+│   │   │   └── momentum.py
+│   │   └── prediction/          # Price prediction
+│   │       └── predictor.py
+│   └── streamlit_app/           # Streamlit web interface
+│       ├── Home.py              # Main dashboard
+│       ├── pages/               # Additional pages
+│       │   └── Technical_Analysis.py
+│       ├── components/          # Reusable components
+│       ├── utils/               # Utility functions
+│       │   ├── config_manager.py
+│       │   └── stock_utils.py
+│       └── config/              # Configuration files
+│           ├── config.yaml
+│           └── dev.yaml
 ├── data/
 │   ├── cache/                  # Cached stock data
 │   └── plots/                  # Generated plots
@@ -65,7 +81,19 @@ pip install -r requirements.txt
 
 ## Usage
 
-### Basic Analysis
+### Running the Streamlit App
+
+```bash
+# For development
+export APP_ENV=dev
+streamlit run src/streamlit_app/Home.py
+
+# For production
+export APP_ENV=prod
+streamlit run src/streamlit_app/Home.py
+```
+
+### Basic Analysis (Python API)
 
 ```python
 from src.single_stock_analysis.data_manager import StockDataManager
@@ -88,6 +116,18 @@ visualizer.plot_returns_distribution(data, "AAPL", period='daily')
 ```bash
 python -m unittest discover tests
 ```
+
+## Configuration
+
+The app uses a flexible configuration system:
+- Base configuration in `config.yaml`
+- Environment-specific overrides in `dev.yaml` or `prod.yaml`
+- Configurable settings for:
+  - App appearance
+  - Data caching
+  - Technical indicators
+  - Visualization options
+  - API settings
 
 ## Data Caching
 
@@ -117,5 +157,8 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - seaborn
 - matplotlib
 - scipy
+- streamlit
+- plotly
+- ta (Technical Analysis)
 
 See `requirements.txt` for specific versions. 

@@ -13,4 +13,5 @@ beautifulsoup4>=4.9.3
 tensorflow>=2.6.0
 keras>=2.6.0
 streamlit>=1.24.0
-plotly>=5.13.0 
+plotly>=5.13.0
+pyyaml>=6.0.1 
