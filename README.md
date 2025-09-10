@@ -24,9 +24,11 @@ A Python application for stock market analysis, visualization, and prediction. T
 - **Trading Strategies**:
   - Momentum-based trading signals
 - **Price Prediction**:
-  - Feature preparation
-  - Model training
-  - Future price predictions
+  - Machine learning models (Linear Regression, Random Forest)
+  - Advanced feature engineering with technical indicators
+  - Multi-day ahead price predictions
+  - Model evaluation and comparison
+  - Interactive prediction dashboard
 
 ## Project Structure
 
@@ -45,7 +47,8 @@ stock_analysis_app/
 │   └── streamlit_app/           # Streamlit web interface
 │       ├── Home.py              # Main dashboard
 │       ├── pages/               # Additional pages
-│       │   └── Technical_Analysis.py
+│       │   ├── Technical_Analysis.py
+│       │   └── Predictions.py
 │       ├── components/          # Reusable components
 │       ├── utils/               # Utility functions
 │       │   ├── config_manager.py
@@ -93,7 +96,10 @@ export APP_ENV=prod
 streamlit run src/streamlit_app/Home.py
 ```
 
-**Getting Started**: The app opens with empty stock symbol input boxes. Simply enter any valid stock ticker symbol (e.g., AAPL, GOOGL, MSFT, TSLA) to begin analysis. The app supports both the main dashboard and technical analysis tabs.
+**Getting Started**: The app opens with empty stock symbol input boxes. Simply enter any valid stock ticker symbol (e.g., AAPL, GOOGL, MSFT, TSLA) to begin analysis. The app supports:
+- **Main Dashboard**: Price charts with moving averages and volume analysis
+- **Technical Analysis**: RSI, MACD, and Bollinger Bands with professional styling
+- **Price Predictions**: ML-powered price predictions with model comparison
 
 ### Basic Analysis (Python API)
 
@@ -111,6 +117,14 @@ data = data_manager.get_stock_data("AAPL")  # Replace "AAPL" with any stock symb
 # Generate plots
 visualizer.plot_price_and_moving_averages(data, "AAPL")
 visualizer.plot_returns_distribution(data, "AAPL", period='daily')
+
+# ML Price Prediction
+from single_stock_analysis.prediction.predictor import StockPredictor
+
+predictor = StockPredictor(data)
+result = predictor.train_model('random_forest')  # Train model
+prediction = predictor.predict(days_ahead=5)     # Get 5-day prediction
+print(f"Predicted price: ${prediction.iloc[0]:.2f}")
 ```
 
 ### Running Tests
@@ -167,6 +181,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - **tensorflow** (>=2.6.0) - Deep learning framework
 - **keras** (>=2.6.0) - Neural network API
 - **statsmodels** (>=0.12.2) - Statistical modeling
+- **joblib** - Model serialization
 
 **Visualization:**
 - **matplotlib** (>=3.4.2) - Static plotting
