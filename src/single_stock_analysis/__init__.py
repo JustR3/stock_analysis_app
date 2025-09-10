@@ -12,5 +12,6 @@ This package provides tools for analyzing individual stocks, including:
 from .data_manager import StockDataManager
 from .data_collector import StockDataCollector
 from .stock_analyzer import StockAnalyzer
+from .prediction.predictor import StockPredictor
 
-__all__ = ['StockDataManager', 'StockDataCollector', 'StockAnalyzer']
+__all__ = ['StockDataManager', 'StockDataCollector', 'StockAnalyzer', 'StockPredictor']
