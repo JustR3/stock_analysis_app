@@ -4,9 +4,13 @@ from datetime import datetime, timedelta
 from .utils.config_manager import ConfigManager
 from .utils.data_service import StreamlitDataService
 
-# Initialize configuration and data service
+# Import the visualizer
+from single_stock_analysis.visualizer import StockVisualizer
+
+# Initialize configuration, data service, and visualizer
 config = ConfigManager()
 data_service = StreamlitDataService()
+visualizer = StockVisualizer()
 
 # Page config
 st.set_page_config(
@@ -58,19 +62,19 @@ if symbol:
             with col3:
                 st.metric("52 Week High", f"${info.get('fiftyTwoWeekHigh', 'N/A')}")
             
-            # Price chart with configured height
-            st.subheader("Price History")
-            st.line_chart(
-                data['Close'],
-                height=config.get("visualization.chart_height", 400)
+            # Price chart with moving averages
+            st.subheader("Price History with Moving Averages")
+            price_fig = visualizer.plot_price_and_moving_averages(
+                data, symbol, ma_windows=[20, 50, 200], save=False
             )
-            
+            if price_fig:
+                st.pyplot(price_fig)
+
             # Volume chart
             st.subheader("Trading Volume")
-            st.bar_chart(
-                data['Volume'],
-                height=config.get("visualization.chart_height", 400)
-            )
+            volume_fig = visualizer.plot_volume_chart(data, symbol, save=False)
+            if volume_fig:
+                st.pyplot(volume_fig)
             
             # Additional metrics
             st.subheader("Performance Metrics")

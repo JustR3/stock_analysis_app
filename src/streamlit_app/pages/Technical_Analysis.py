@@ -4,9 +4,13 @@ from datetime import datetime, timedelta
 from ..utils.config_manager import ConfigManager
 from ..utils.data_service import StreamlitDataService
 
-# Initialize configuration and data service
+# Import the visualizer
+from single_stock_analysis.visualizer import StockVisualizer
+
+# Initialize configuration, data service, and visualizer
 config = ConfigManager()
 data_service = StreamlitDataService()
+visualizer = StockVisualizer()
 
 st.set_page_config(
     page_title="Technical Analysis",
@@ -54,42 +58,35 @@ if symbol:
             # Calculate technical indicators
             indicators = data_service.get_technical_indicators(data)
             
-            # Display charts with configured height
-            chart_height = config.get("visualization.chart_height", 400)
-            
-            st.subheader("Price and Bollinger Bands")
-            st.line_chart(
-                pd.concat([
-                    data['Close'],
-                    indicators[['BB_Upper', 'BB_Middle', 'BB_Lower']]
-                ], axis=1),
-                height=chart_height
+            # Display comprehensive technical analysis chart
+            st.subheader("Comprehensive Technical Analysis")
+            tech_fig = visualizer.plot_technical_indicators(
+                data, indicators, symbol, save=False
             )
-            
-            st.subheader("RSI (Relative Strength Index)")
-            st.line_chart(
-                indicators['RSI'],
-                height=chart_height
-            )
-            
-            st.subheader("MACD (Moving Average Convergence Divergence)")
-            st.line_chart(
-                indicators[['MACD', 'MACD_Signal']],
-                height=chart_height
-            )
-            
-            # Display current values with overbought/oversold levels
+            if tech_fig:
+                st.pyplot(tech_fig)
+
+            # Technical indicators summary with color coding
+            st.subheader("Technical Indicators Summary")
             col1, col2, col3 = st.columns(3)
+
             with col1:
-                rsi_value = indicators['RSI'].iloc[-1]
-                # Use 'normal' for overbought (red), 'inverse' for oversold (green), 'off' for neutral
-                rsi_color = "normal" if rsi_value > config.get("technical_analysis.indicators.rsi.overbought", 70) else \
-                           "inverse" if rsi_value < config.get("technical_analysis.indicators.rsi.oversold", 30) else "off"
-                st.metric("Current RSI", f"{rsi_value:.2f}", delta_color=rsi_color)
+                if 'RSI' in indicators.columns:
+                    rsi_value = indicators['RSI'].iloc[-1]
+                    # Use color coding for RSI levels
+                    rsi_color = "normal" if rsi_value > config.get("technical_analysis.indicators.rsi.overbought", 70) else \
+                               "inverse" if rsi_value < config.get("technical_analysis.indicators.rsi.oversold", 30) else "off"
+                    st.metric("Current RSI", f"{rsi_value:.2f}", delta_color=rsi_color)
+
             with col2:
-                st.metric("MACD", f"{indicators['MACD'].iloc[-1]:.2f}")
+                if 'MACD' in indicators.columns:
+                    macd_value = indicators['MACD'].iloc[-1]
+                    st.metric("Current MACD", f"{macd_value:.4f}")
+
             with col3:
-                st.metric("MACD Signal", f"{indicators['MACD_Signal'].iloc[-1]:.2f}")
+                if 'MACD_Signal' in indicators.columns:
+                    signal_value = indicators['MACD_Signal'].iloc[-1]
+                    st.metric("MACD Signal", f"{signal_value:.4f}")
                 
         else:
             st.error(f"No data found for symbol {symbol}")
