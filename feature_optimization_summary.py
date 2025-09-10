@@ -3,6 +3,8 @@
 Feature Optimization Summary
 Shows the improvements made to the feature engineering
 """
+
+
 def show_feature_optimization_summary():
     """Display the feature optimization summary"""
 
@@ -35,7 +37,7 @@ def show_feature_optimization_summary():
         "➖ Removed BB_Upper, BB_Lower (redundant with other volatility measures)",
         "➖ Removed MACD_Signal (complex signal, potential overfitting)",
         "🔄 Reorganized features by importance priority",
-        "📈 Enhanced feature engineering with momentum calculations"
+        "📈 Enhanced feature engineering with momentum calculations",
     ]
 
     for improvement in improvements:
@@ -49,7 +51,7 @@ def show_feature_optimization_summary():
         "⚡ Reduced multicollinearity by removing redundant features",
         "🚀 Improved model generalization with focused feature set",
         "📊 Better interpretability with prioritized features",
-        "💪 Enhanced short-term prediction capabilities"
+        "💪 Enhanced short-term prediction capabilities",
     ]
 
     for item in impact:
@@ -62,7 +64,7 @@ def show_feature_optimization_summary():
         ("🟠 HIGH", ["MA_20", "daily_return", "RSI"]),
         ("🟡 MEDIUM", ["Close_lag_3", "MA_50", "Volume", "MACD"]),
         ("🟢 LOW", ["volatility", "price_change_5d", "RSI_lag_1"]),
-        ("🔵 CONTEXT", ["Open", "High", "Low", "volume_ma_5", "momentum_5d"])
+        ("🔵 CONTEXT", ["Open", "High", "Low", "volume_ma_5", "momentum_5d"]),
     ]
 
     for level, features in hierarchy:
@@ -77,6 +79,7 @@ def show_feature_optimization_summary():
     print("   2. Compare performance metrics")
     print("   3. Fine-tune hyperparameters")
     print("   4. Validate on new data")
+
 
 def show_eda_recommendations():
     """Show EDA-driven recommendations"""
@@ -103,6 +106,7 @@ def show_eda_recommendations():
     print("   • Track feature importance changes over time")
     print("   • Monitor for feature drift")
     print("   • Regular model retraining with new data")
+
 
 if __name__ == "__main__":
     show_feature_optimization_summary()

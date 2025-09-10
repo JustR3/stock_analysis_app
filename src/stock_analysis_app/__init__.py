@@ -4,7 +4,7 @@ __version__ = "1.0.0"
 __author__ = "Stock Analysis Team"
 __email__ = "team@stockanalysis.com"
 
-from .core import StockAnalyzer, DataManager
+from .core import DataManager, StockAnalyzer
 from .features import FeatureEngineer
 from .models import StockPredictor
 from .viz import StockVisualizer

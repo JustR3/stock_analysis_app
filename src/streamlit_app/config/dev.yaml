@@ -10,4 +10,4 @@ data:
 api:
   yfinance:
     timeout: 5  # shorter timeout for development
-    retries: 1  # fewer retries for development 
+    retries: 1  # fewer retries for development

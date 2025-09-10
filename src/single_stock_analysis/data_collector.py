@@ -1,16 +1,17 @@
-import yfinance as yf
-import pandas as pd
-from datetime import datetime, timedelta
-import time
 import logging
-from typing import Optional, Dict, List
+import time
+from datetime import datetime, timedelta
+from typing import Dict, List, Optional
+
+import pandas as pd
+import yfinance as yf
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
+
 
 class StockDataCollector:
     def __init__(self, rate_limit_delay: int = 5, max_retries: int = 3):
@@ -46,12 +47,16 @@ class StockDataCollector:
         """
         if attempt < self.max_retries:
             # Exponential backoff: 5, 10, 20 seconds
-            backoff_time = self.rate_limit_delay * (2 ** attempt)
-            logger.warning(f"Rate limited for {ticker}. Retrying in {backoff_time} seconds (attempt {attempt + 1}/{self.max_retries})")
+            backoff_time = self.rate_limit_delay * (2**attempt)
+            logger.warning(
+                f"Rate limited for {ticker}. Retrying in {backoff_time} seconds (attempt {attempt + 1}/{self.max_retries})"
+            )
             time.sleep(backoff_time)
             return True
         else:
-            logger.error(f"Rate limit exceeded for {ticker} after {self.max_retries} attempts")
+            logger.error(
+                f"Rate limit exceeded for {ticker} after {self.max_retries} attempts"
+            )
             return False
 
     def get_stock_data(
@@ -59,7 +64,7 @@ class StockDataCollector:
         ticker: str,
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
-        interval: str = "1d"
+        interval: str = "1d",
     ) -> pd.DataFrame:
         """
         Fetch stock data for a given ticker with retry mechanism.
@@ -75,9 +80,9 @@ class StockDataCollector:
         """
         # Set default dates if not provided
         if not end_date:
-            end_date = datetime.now().strftime('%Y-%m-%d')
+            end_date = datetime.now().strftime("%Y-%m-%d")
         if not start_date:
-            start_date = (datetime.now() - timedelta(days=365)).strftime('%Y-%m-%d')
+            start_date = (datetime.now() - timedelta(days=365)).strftime("%Y-%m-%d")
 
         logger.info(f"Fetching data for {ticker} from {start_date} to {end_date}")
 
@@ -102,7 +107,9 @@ class StockDataCollector:
                         continue
                     else:
                         # Max retries exceeded
-                        raise Exception(f"Rate limit exceeded for {ticker} after {self.max_retries} attempts")
+                        raise Exception(
+                            f"Rate limit exceeded for {ticker} after {self.max_retries} attempts"
+                        )
                 else:
                     # Non-rate-limit error, don't retry
                     logger.error(f"Error fetching data for {ticker}: {str(e)}")
@@ -140,7 +147,9 @@ class StockDataCollector:
                         continue
                     else:
                         # Max retries exceeded
-                        logger.error(f"Failed to fetch stock info for {ticker} after {self.max_retries} attempts")
+                        logger.error(
+                            f"Failed to fetch stock info for {ticker} after {self.max_retries} attempts"
+                        )
                         return {}
                 else:
                     # Non-rate-limit error, don't retry
@@ -154,17 +163,17 @@ class StockDataCollector:
         tickers: List[str],
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
-        interval: str = "1d"
+        interval: str = "1d",
     ) -> Dict[str, pd.DataFrame]:
         """
         Fetch data for multiple stocks.
-        
+
         Args:
             tickers (List[str]): List of stock ticker symbols
             start_date (str): Start date in YYYY-MM-DD format
             end_date (str): End date in YYYY-MM-DD format
             interval (str): Data interval
-            
+
         Returns:
             Dict[str, pd.DataFrame]: Dictionary of stock dataframes
         """
@@ -173,4 +182,4 @@ class StockDataCollector:
             data = self.get_stock_data(ticker, start_date, end_date, interval)
             if not data.empty:
                 results[ticker] = data
-        return results 
+        return results

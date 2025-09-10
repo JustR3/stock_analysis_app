@@ -1,40 +1,37 @@
-import streamlit as st
-import pandas as pd
-from datetime import datetime, timedelta
 import sys
+from datetime import datetime, timedelta
 from pathlib import Path
+
+import pandas as pd
+import streamlit as st
 
 # Add the src directory to the Python path
 src_path = str(Path(__file__).parent.parent.parent.parent)
 if src_path not in sys.path:
     sys.path.append(src_path)
 
-from streamlit_app.utils.config_manager import ConfigManager
-from streamlit_app.utils.data_service import StreamlitDataService
-
 # Import the StockPredictor
 from single_stock_analysis.prediction.predictor import StockPredictor
+from streamlit_app.utils.config_manager import ConfigManager
+from streamlit_app.utils.data_service import StreamlitDataService
 
 # Initialize configuration and data service
 config = ConfigManager()
 data_service = StreamlitDataService()
 
-st.set_page_config(
-    page_title="Stock Price Predictions",
-    page_icon="🔮"
-)
+st.set_page_config(page_title="Stock Price Predictions", page_icon="🔮")
 
 st.title("Stock Price Predictions")
-st.markdown("Use machine learning models to predict future stock prices based on historical data and technical indicators.")
+st.markdown(
+    "Use machine learning models to predict future stock prices based on historical data and technical indicators."
+)
 
 # Sidebar controls
 st.sidebar.header("Prediction Settings")
 symbol = st.sidebar.text_input("Stock Symbol").upper()
 days_ahead = st.sidebar.slider("Days Ahead to Predict", 1, 30, 5)
 model_choice = st.sidebar.selectbox(
-    "ML Model",
-    ["random_forest", "linear_regression"],
-    index=0
+    "ML Model", ["random_forest", "linear_regression"], index=0
 )
 
 # Train/Test split
@@ -46,8 +43,10 @@ if symbol:
         with st.spinner("Fetching stock data..."):
             data, info = data_service.get_stock_data(
                 symbol,
-                start_date=(datetime.now() - timedelta(days=365*2)).strftime('%Y-%m-%d'),
-                end_date=datetime.now().strftime('%Y-%m-%d')
+                start_date=(datetime.now() - timedelta(days=365 * 2)).strftime(
+                    "%Y-%m-%d"
+                ),
+                end_date=datetime.now().strftime("%Y-%m-%d"),
             )
 
         if not data.empty:
@@ -86,11 +85,11 @@ if symbol:
                     with st.spinner(f"Training {model_choice} model..."):
                         result = predictor.train_model(model_choice, test_size)
 
-                        if 'error' not in result:
+                        if "error" not in result:
                             st.success("✅ Model trained successfully!")
 
                             # Display metrics
-                            metrics = result['metrics']
+                            metrics = result["metrics"]
                             col1, col2, col3, col4 = st.columns(4)
 
                             with col1:
@@ -100,20 +99,30 @@ if symbol:
                             with col3:
                                 st.metric("Test MAE", f"{metrics['test_mae']:.4f}")
                             with col4:
-                                st.metric("Training Samples", result['training_samples'])
+                                st.metric(
+                                    "Training Samples", result["training_samples"]
+                                )
 
                             # Model performance visualization
                             st.subheader("📈 Model Performance")
 
                             # Create a simple performance chart
                             performance_data = {
-                                'Metric': ['R² Score', 'MSE', 'MAE'],
-                                'Train': [metrics['train_r2'], metrics['train_mse'], metrics['train_mae']],
-                                'Test': [metrics['test_r2'], metrics['test_mse'], metrics['test_mae']]
+                                "Metric": ["R² Score", "MSE", "MAE"],
+                                "Train": [
+                                    metrics["train_r2"],
+                                    metrics["train_mse"],
+                                    metrics["train_mae"],
+                                ],
+                                "Test": [
+                                    metrics["test_r2"],
+                                    metrics["test_mse"],
+                                    metrics["test_mae"],
+                                ],
                             }
 
                             perf_df = pd.DataFrame(performance_data)
-                            st.bar_chart(perf_df.set_index('Metric'))
+                            st.bar_chart(perf_df.set_index("Metric"))
                         else:
                             st.error(f"❌ Training failed: {result['error']}")
 
@@ -132,37 +141,53 @@ if symbol:
                                 prediction_date = prediction.index[0]
 
                                 # Display prediction
-                                st.success(f"🎯 **Predicted Price:** ${predicted_price:.2f}")
-                                st.info(f"📅 **Prediction Date:** {prediction_date.strftime('%Y-%m-%d')}")
+                                st.success(
+                                    f"🎯 **Predicted Price:** ${predicted_price:.2f}"
+                                )
+                                st.info(
+                                    f"📅 **Prediction Date:** {prediction_date.strftime('%Y-%m-%d')}"
+                                )
 
                                 # Compare with current price
-                                current_price = data['Close'].iloc[-1]
-                                price_change = ((predicted_price - current_price) / current_price) * 100
+                                current_price = data["Close"].iloc[-1]
+                                price_change = (
+                                    (predicted_price - current_price) / current_price
+                                ) * 100
 
                                 col1, col2 = st.columns(2)
                                 with col1:
                                     st.metric("Current Price", f"${current_price:.2f}")
                                 with col2:
                                     color = "inverse" if price_change > 0 else "normal"
-                                    st.metric("Predicted Change", f"{price_change:+.2f}%", delta_color=color)
+                                    st.metric(
+                                        "Predicted Change",
+                                        f"{price_change:+.2f}%",
+                                        delta_color=color,
+                                    )
 
                                 # Show recent price history
                                 st.subheader("📈 Recent Price History")
                                 recent_data = data.tail(30)  # Last 30 days
 
                                 # Create a simple line chart
-                                chart_data = pd.DataFrame({
-                                    'Close': recent_data['Close']
-                                })
+                                chart_data = pd.DataFrame(
+                                    {"Close": recent_data["Close"]}
+                                )
                                 st.line_chart(chart_data)
 
                                 # Add prediction point to chart
-                                st.info("💡 **Note:** This prediction is based on historical patterns and technical indicators. Always consider multiple factors and consult with financial advisors before making investment decisions.")
+                                st.info(
+                                    "💡 **Note:** This prediction is based on historical patterns and technical indicators. Always consider multiple factors and consult with financial advisors before making investment decisions."
+                                )
 
                             else:
-                                st.error("❌ Failed to generate prediction. Please ensure the model is trained.")
+                                st.error(
+                                    "❌ Failed to generate prediction. Please ensure the model is trained."
+                                )
                 else:
-                    st.warning("⚠️ **No trained models available.** Please train a model first.")
+                    st.warning(
+                        "⚠️ **No trained models available.** Please train a model first."
+                    )
 
                 # Model comparison section
                 st.subheader("⚖️ Model Comparison")
@@ -174,27 +199,41 @@ if symbol:
                         # Create comparison table
                         comparison_data = []
                         for model_name, result in results.items():
-                            if 'error' not in result:
-                                metrics = result['metrics']
-                                comparison_data.append({
-                                    'Model': model_name.replace('_', ' ').title(),
-                                    'Test R²': metrics['test_r2'],
-                                    'Test MSE': metrics['test_mse'],
-                                    'Test MAE': metrics['test_mae']
-                                })
+                            if "error" not in result:
+                                metrics = result["metrics"]
+                                comparison_data.append(
+                                    {
+                                        "Model": model_name.replace("_", " ").title(),
+                                        "Test R²": metrics["test_r2"],
+                                        "Test MSE": metrics["test_mse"],
+                                        "Test MAE": metrics["test_mae"],
+                                    }
+                                )
 
                         if comparison_data:
                             comparison_df = pd.DataFrame(comparison_data)
-                            st.dataframe(comparison_df.style.highlight_max(axis=0, subset=['Test R²']))
+                            st.dataframe(
+                                comparison_df.style.highlight_max(
+                                    axis=0, subset=["Test R²"]
+                                )
+                            )
 
                             # Best model recommendation
-                            best_model = max(comparison_data, key=lambda x: x['Test R²'])
-                            st.success(f"🏆 **Recommended Model:** {best_model['Model']} (R²: {best_model['Test R²']:.4f})")
+                            best_model = max(
+                                comparison_data, key=lambda x: x["Test R²"]
+                            )
+                            st.success(
+                                f"🏆 **Recommended Model:** {best_model['Model']} (R²: {best_model['Test R²']:.4f})"
+                            )
                         else:
-                            st.error("❌ Model comparison failed. Check the logs for details.")
+                            st.error(
+                                "❌ Model comparison failed. Check the logs for details."
+                            )
 
             else:
-                st.warning("⚠️ **Insufficient data for prediction.** The stock needs more historical data or technical indicators.")
+                st.warning(
+                    "⚠️ **Insufficient data for prediction.** The stock needs more historical data or technical indicators."
+                )
 
         else:
             st.error(f"❌ No data found for symbol {symbol}")
@@ -208,7 +247,8 @@ if symbol:
 
 else:
     st.info("🎯 **Getting Started:**")
-    st.markdown("""
+    st.markdown(
+        """
     1. Enter a valid stock symbol (e.g., AAPL, GOOGL, MSFT, TSLA)
     2. Adjust prediction settings in the sidebar
     3. Train a machine learning model
@@ -217,7 +257,8 @@ else:
 
     **Note:** Predictions are based on historical data and technical indicators.
     They should not be used as the sole basis for investment decisions.
-    """)
+    """
+    )
 
     # Show some example stocks
     st.subheader("📋 Popular Stock Symbols to Try:")
