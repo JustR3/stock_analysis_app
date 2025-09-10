@@ -69,31 +69,55 @@ class StockPredictor:
             # Basic price features
             base_features = ['Open', 'High', 'Low', 'Close', 'Volume']
 
-            # Technical indicator features (if available)
-            technical_features = []
+            # Create lagged features for Close price (OPTIMIZED)
+            df['Close_lag_1'] = df['Close'].shift(1)
+            df['Close_lag_2'] = df['Close'].shift(2)
+            df['Close_lag_3'] = df['Close'].shift(3)  # Additional lag
+            lag_features = ['Close_lag_1', 'Close_lag_2', 'Close_lag_3']
+
+            # Additional derived features
+            df['price_change_5d'] = df['Close'] - df['Close'].shift(5)
+            df['volume_ma_5'] = df['Volume'].rolling(window=5).mean()
+            df['momentum_5d'] = (df['Close'] - df['Close'].shift(5)) / df['Close'].shift(5)
+
+            # Core technical features (HIGH IMPORTANCE)
+            core_features = []
             if 'daily_return' in df.columns:
-                technical_features.append('daily_return')
+                core_features.append('daily_return')
+
+            # Essential moving averages only (remove MA_200 as per analysis)
+            essential_ma = ['MA_20', 'MA_50']  # Focus on short/medium term
+            ma_features = [ma for ma in essential_ma if ma in df.columns]
+            core_features.extend(ma_features)
+
+            # Key momentum indicators
+            momentum_features = []
+            if 'RSI' in df.columns:
+                momentum_features.append('RSI')
+                # Add lagged RSI for trend analysis
+                df['RSI_lag_1'] = df['RSI'].shift(1)
+                momentum_features.append('RSI_lag_1')
+
+            if 'MACD' in df.columns:
+                momentum_features.append('MACD')
+                # Skip MACD_Signal as it's redundant (per analysis)
+
+            # Supporting features (lower priority)
+            supporting_features = []
+            if 'Volume' in df.columns:
+                supporting_features.append('Volume')
             if 'volatility' in df.columns:
-                technical_features.append('volatility')
+                supporting_features.append('volatility')
 
-            # Moving average features
-            ma_features = [col for col in df.columns if col.startswith('MA_')]
-            technical_features.extend(ma_features)
+            # Additional derived features
+            derived_features = ['price_change_5d', 'volume_ma_5', 'momentum_5d']
+            derived_features = [f for f in derived_features if f in df.columns]
 
-            # RSI features
-            rsi_features = [col for col in df.columns if col.startswith('RSI')]
-            technical_features.extend(rsi_features)
-
-            # MACD features
-            macd_features = [col for col in df.columns if col.startswith('MACD')]
-            technical_features.extend(macd_features)
-
-            # Bollinger Band features
-            bb_features = [col for col in df.columns if col.startswith('BB_')]
-            technical_features.extend(bb_features)
+            # Combine features by priority
+            technical_features = core_features + momentum_features + supporting_features + derived_features
 
             # Combine all features
-            all_features = base_features + technical_features
+            all_features = base_features + lag_features + technical_features
 
             # Ensure all features exist
             available_features = [col for col in all_features if col in df.columns]
