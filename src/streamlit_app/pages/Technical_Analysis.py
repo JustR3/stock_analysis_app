@@ -1,8 +1,8 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta
-from utils.config_manager import ConfigManager
-from utils.data_service import StreamlitDataService
+from ..utils.config_manager import ConfigManager
+from ..utils.data_service import StreamlitDataService
 
 # Initialize configuration and data service
 config = ConfigManager()
