@@ -85,8 +85,12 @@ class StreamlitDataService:
         # Calculate indicators
         indicators = pd.DataFrame(index=data.index)
         
-        # RSI
-        indicators['RSI'] = data['Close'].ewm(span=rsi_period).mean()
+        # RSI - Proper calculation
+        delta = data['Close'].diff()
+        gain = (delta.where(delta > 0, 0)).rolling(window=rsi_period).mean()
+        loss = (-delta.where(delta < 0, 0)).rolling(window=rsi_period).mean()
+        rs = gain / loss
+        indicators['RSI'] = 100 - (100 / (1 + rs))
         
         # MACD
         exp1 = data['Close'].ewm(span=macd_fast).mean()

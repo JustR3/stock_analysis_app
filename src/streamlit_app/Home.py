@@ -1,12 +1,13 @@
 import streamlit as st
 import pandas as pd
+import matplotlib.pyplot as plt
 from datetime import datetime, timedelta
 import sys
 from pathlib import Path
 
 # Add the src directory to the Python path
 current_dir = Path(__file__).parent
-src_dir = current_dir.parent.parent  # Go up to src directory
+src_dir = current_dir.parent  # Go up to src directory
 if str(src_dir) not in sys.path:
     sys.path.insert(0, str(src_dir))
 
@@ -85,7 +86,49 @@ if symbol:
             volume_fig = visualizer.plot_volume_chart(data, symbol, save=False)
             if volume_fig:
                 st.pyplot(volume_fig)
-            
+
+            # Technical Indicators (RSI)
+            st.subheader("Technical Indicators")
+            try:
+                # Calculate technical indicators
+                indicators = data_service.get_technical_indicators(data)
+
+                # RSI Chart
+                if 'RSI' in indicators.columns:
+                    col1, col2 = st.columns([3, 1])
+
+                    with col1:
+                        fig, ax = plt.subplots(figsize=(12, 4))
+                        ax.plot(data.index, indicators['RSI'], color='purple', linewidth=1.5, label='RSI')
+
+                        # Add RSI reference lines
+                        ax.axhline(y=70, color='red', linestyle='--', alpha=0.7, label='Overbought (70)')
+                        ax.axhline(y=30, color='green', linestyle='--', alpha=0.7, label='Oversold (30)')
+                        ax.axhline(y=50, color='gray', linestyle='-', alpha=0.5, label='Neutral (50)')
+
+                        ax.set_ylim(0, 100)
+                        ax.set_title(f'{symbol} RSI (Relative Strength Index)', fontsize=14, pad=20)
+                        ax.set_xlabel('Date', fontsize=12)
+                        ax.set_ylabel('RSI Value', fontsize=12)
+                        ax.legend(fontsize=10)
+                        ax.tick_params(axis='x', rotation=45)
+                        plt.tight_layout()
+                        st.pyplot(fig)
+
+                    with col2:
+                        rsi_value = indicators['RSI'].iloc[-1]
+                        st.metric("Current RSI", f"{rsi_value:.2f}")
+
+                        # RSI interpretation
+                        if rsi_value > 70:
+                            st.warning("📈 **Overbought** - Consider selling")
+                        elif rsi_value < 30:
+                            st.success("📉 **Oversold** - Consider buying")
+                        else:
+                            st.info("➖ **Neutral** - Hold position")
+            except Exception as e:
+                st.warning(f"Could not calculate technical indicators: {str(e)}")
+
             # Additional metrics
             st.subheader("Performance Metrics")
             col1, col2, col3 = st.columns(3)
