@@ -9,7 +9,7 @@ if src_path not in sys.path:
     sys.path.append(src_path)
 
 from single_stock_analysis.data_manager import StockDataManager
-from .config_manager import ConfigManager
+from streamlit_app.utils.config_manager import ConfigManager
 
 class StreamlitDataService:
     def __init__(self):

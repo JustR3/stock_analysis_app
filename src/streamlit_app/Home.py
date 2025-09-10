@@ -1,8 +1,16 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta
-from .utils.config_manager import ConfigManager
-from .utils.data_service import StreamlitDataService
+import sys
+from pathlib import Path
+
+# Add the src directory to the Python path
+src_path = str(Path(__file__).parent.parent.parent)
+if src_path not in sys.path:
+    sys.path.append(src_path)
+
+from streamlit_app.utils.config_manager import ConfigManager
+from streamlit_app.utils.data_service import StreamlitDataService
 
 # Import the visualizer
 from single_stock_analysis.visualizer import StockVisualizer
