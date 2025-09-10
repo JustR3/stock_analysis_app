@@ -4,9 +4,10 @@ import pandas as pd
 from typing import Tuple, Dict, Any
 
 # Add the src directory to the Python path
-src_path = str(Path(__file__).parent.parent.parent)
-if src_path not in sys.path:
-    sys.path.append(src_path)
+current_dir = Path(__file__).parent
+src_dir = current_dir.parent.parent.parent  # Go up to src directory
+if str(src_dir) not in sys.path:
+    sys.path.insert(0, str(src_dir))
 
 from single_stock_analysis.data_manager import StockDataManager
 from streamlit_app.utils.config_manager import ConfigManager
