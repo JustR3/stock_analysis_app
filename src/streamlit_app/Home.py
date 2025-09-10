@@ -31,6 +31,11 @@ st.set_page_config(page_title=config.get("app.name"), page_icon="📈", layout="
 st.title(config.get("app.name"))
 st.markdown(config.get("app.description"))
 
+# Navigation hint
+st.info(
+    "🔬 **New!** Check out the **Advanced Analysis** page for sophisticated time series forecasting with ARIMA, GARCH, and stochastic calculus!"
+)
+
 # Sidebar
 st.sidebar.header("Stock Selection")
 symbol = st.sidebar.text_input("Enter Stock Symbol").upper()

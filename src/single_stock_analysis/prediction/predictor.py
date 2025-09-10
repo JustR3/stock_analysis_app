@@ -40,6 +40,10 @@ class StockPredictor:
         # Initialize models
         self._initialize_models()
 
+        # Initialize advanced time series models
+        self.advanced_predictor = None
+        self._initialize_advanced_models()
+
     def _initialize_models(self):
         """Initialize different ML models for prediction."""
         self.models = {
@@ -50,6 +54,24 @@ class StockPredictor:
         }
 
         logger.info(f"Initialized {len(self.models)} ML models")
+
+    def _initialize_advanced_models(self):
+        """Initialize advanced time series and stochastic models"""
+        try:
+            # Import advanced models (optional dependency)
+            try:
+                from stock_analysis_app.models.timeseries_models import (
+                    AdvancedPredictor,
+                )
+
+                self.advanced_predictor = AdvancedPredictor(self.data)
+                logger.info("Advanced time series models initialized")
+            except ImportError:
+                logger.warning(
+                    "Advanced time series models not available. Install 'arch' and 'scipy' packages."
+                )
+        except Exception as e:
+            logger.error(f"Error initializing advanced models: {str(e)}")
 
     def prepare_features(
         self, prediction_days: int = 5
@@ -356,3 +378,69 @@ class StockPredictor:
             if os.path.exists(model_path):
                 available_models.append(model_name)
         return available_models
+
+    def get_advanced_predictions(self, horizon: int = 30) -> Dict[str, Any]:
+        """
+        Get predictions using advanced time series models
+
+        Args:
+            horizon (int): Prediction horizon in days
+
+        Returns:
+            Dict[str, Any]: Advanced prediction results
+        """
+        try:
+            if self.advanced_predictor is None:
+                return {"error": "Advanced models not available"}
+
+            # Fit models if not already fitted
+            if (
+                not hasattr(self.advanced_predictor, "arima_model")
+                or self.advanced_predictor.arima_model is None
+            ):
+                logger.info("Fitting advanced models...")
+                self.advanced_predictor.fit_models()
+
+            # Generate predictions
+            logger.info(f"Generating advanced predictions for {horizon} days...")
+            predictions = self.advanced_predictor.generate_predictions(horizon=horizon)
+
+            return {
+                "status": "success",
+                "horizon": horizon,
+                "predictions": predictions,
+                "models_used": ["ARIMA", "GARCH", "GBM", "RiskMetrics"],
+            }
+
+        except Exception as e:
+            logger.error(f"Error generating advanced predictions: {str(e)}")
+            return {"error": str(e)}
+
+    def plot_advanced_analysis(
+        self, save_path: Optional[str] = None
+    ) -> Optional[plt.Figure]:
+        """
+        Create comprehensive advanced analysis plot
+
+        Args:
+            save_path (Optional[str]): Path to save the plot
+
+        Returns:
+            Optional[plt.Figure]: Analysis plot
+        """
+        try:
+            if self.advanced_predictor is None:
+                logger.warning("Advanced predictor not available")
+                return None
+
+            fig = self.advanced_predictor.plot_predictions()
+
+            if save_path:
+                fig.savefig(save_path, dpi=300, bbox_inches="tight")
+                logger.info(f"Advanced analysis plot saved to {save_path}")
+
+            return fig
+
+        except Exception as e:
+            logger.error(f"Error creating advanced analysis plot: {str(e)}")
+            return None
