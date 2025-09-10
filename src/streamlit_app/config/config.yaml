@@ -1,0 +1,51 @@
+# App Settings
+app:
+  name: "Stock Analysis Dashboard"
+  description: "Comprehensive stock analysis and visualization tool"
+  theme:
+    primary_color: "#1E88E5"
+    secondary_color: "#FFC107"
+    background_color: "#FFFFFF"
+    text_color: "#000000"
+
+# Data Settings
+data:
+  default_symbol: "AAPL"
+  default_period: "1y"
+  cache_duration: 3600  # seconds
+  max_data_points: 1000
+
+# Technical Analysis Settings
+technical_analysis:
+  indicators:
+    rsi:
+      period: 14
+      overbought: 70
+      oversold: 30
+    macd:
+      fast_period: 12
+      slow_period: 26
+      signal_period: 9
+    bollinger_bands:
+      period: 20
+      std_dev: 2
+
+# Visualization Settings
+visualization:
+  chart_height: 400
+  default_theme: "plotly_white"
+  colors:
+    - "#1E88E5"
+    - "#FFC107"
+    - "#4CAF50"
+    - "#F44336"
+    - "#9C27B0"
+
+# API Settings
+api:
+  yfinance:
+    timeout: 10
+    retries: 3
+    cache: true
+    rate_limit_delay: 5
+    max_retries: 3 

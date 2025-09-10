@@ -1,0 +1,13 @@
+# Development Settings
+app:
+  debug: true
+  log_level: "DEBUG"
+
+data:
+  cache_duration: 60  # shorter cache for development
+  max_data_points: 500  # limit data points for faster development
+
+api:
+  yfinance:
+    timeout: 5  # shorter timeout for development
+    retries: 1  # fewer retries for development 
