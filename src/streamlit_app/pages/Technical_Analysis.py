@@ -17,8 +17,7 @@ st.title("Technical Analysis")
 
 # Sidebar controls
 st.sidebar.header("Analysis Parameters")
-default_symbol = config.get("data.default_symbol", "AAPL")
-symbol = st.sidebar.text_input("Stock Symbol", default_symbol).upper()
+symbol = st.sidebar.text_input("Stock Symbol").upper()
 period = st.sidebar.selectbox(
     "Time Period",
     ["1mo", "3mo", "6mo", "1y", "2y", "5y", "max"],

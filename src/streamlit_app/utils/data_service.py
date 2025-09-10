@@ -15,9 +15,23 @@ class StreamlitDataService:
     def __init__(self):
         """Initialize the Streamlit data service."""
         self.config = ConfigManager()
+
+        # Get API configuration for rate limiting
+        rate_limit_delay = self.config.get("api.yfinance.rate_limit_delay", 5)
+        max_retries = self.config.get("api.yfinance.max_retries", 3)
+
+        # Initialize data manager with configured collector
+        from single_stock_analysis.data_collector import StockDataCollector
+        collector = StockDataCollector(
+            rate_limit_delay=rate_limit_delay,
+            max_retries=max_retries
+        )
+
+        # Create data manager with the configured collector
         self.data_manager = StockDataManager(
             cache_dir=self.config.get("data.cache_dir", "data/cache")
         )
+        self.data_manager.collector = collector
         
     def get_stock_data(self, symbol: str, start_date: str = None, end_date: str = None) -> Tuple[pd.DataFrame, Dict[str, Any]]:
         """
@@ -41,8 +55,8 @@ class StreamlitDataService:
             if end_date:
                 data = data[data.index <= end_date]
                 
-            # Get stock info
-            stock = self.data_manager.collector.get_stock_info(symbol)
+            # Get stock info (with caching)
+            stock = self.data_manager.get_stock_info(symbol)
             
             return data, stock
             

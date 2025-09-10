@@ -57,7 +57,7 @@ class StockAnalyzer:
         Returns:
             pd.Series: Volatility series
         """
-        returns = self.calculate_returns()
+        returns = self.calculate_returns(period='daily')
         return returns.rolling(window=window).std() * np.sqrt(252)
     
     def calculate_moving_averages(self, windows: List[int] = [20, 50, 200]) -> Dict[str, pd.Series]:
@@ -80,7 +80,7 @@ class StockAnalyzer:
         Returns:
             Dict: Dictionary of summary statistics
         """
-        returns = self.calculate_returns()
+        returns = self.calculate_returns(period='daily')
         return {
             'mean_return': returns.mean(),
             'std_return': returns.std(),
@@ -127,7 +127,7 @@ class StockAnalyzer:
         Returns:
             float: Value at Risk
         """
-        returns = self.calculate_returns()
+        returns = self.calculate_returns(period='daily')
         if method == 'historical':
             return np.percentile(returns, (1 - confidence_level) * 100)
         elif method == 'parametric':
@@ -147,7 +147,7 @@ class StockAnalyzer:
         Returns:
             float: Conditional Value at Risk
         """
-        returns = self.calculate_returns()
+        returns = self.calculate_returns(period='daily')
         var = self.calculate_var(confidence_level)
         return returns[returns <= var].mean()
 
@@ -161,7 +161,7 @@ class StockAnalyzer:
         Returns:
             float: Beta coefficient
         """
-        stock_returns = self.calculate_returns()
+        stock_returns = self.calculate_returns(period='daily')
         covariance = np.cov(stock_returns, market_returns)[0][1]
         market_variance = np.var(market_returns)
         return covariance / market_variance
@@ -176,7 +176,7 @@ class StockAnalyzer:
         Returns:
             float: Information Ratio
         """
-        excess_returns = self.calculate_returns() - benchmark_returns
+        excess_returns = self.calculate_returns(period='daily') - benchmark_returns
         return np.sqrt(252) * excess_returns.mean() / excess_returns.std()
 
     def get_advanced_statistics(self, market_returns: Optional[pd.Series] = None) -> Dict:
@@ -209,7 +209,7 @@ class StockAnalyzer:
 
     def _calculate_sortino_ratio(self, risk_free_rate: float = 0.0) -> float:
         """Calculate Sortino Ratio."""
-        returns = self.calculate_returns()
+        returns = self.calculate_returns(period='daily')
         excess_returns = returns - risk_free_rate/252
         downside_returns = excess_returns[excess_returns < 0]
         downside_std = np.sqrt(np.mean(downside_returns**2))
@@ -217,7 +217,7 @@ class StockAnalyzer:
 
     def _calculate_calmar_ratio(self) -> float:
         """Calculate Calmar Ratio."""
-        returns = self.calculate_returns()
+        returns = self.calculate_returns(period='daily')
         max_drawdown = (self.data['Close'] / self.data['Close'].cummax() - 1).min()
         return np.sqrt(252) * returns.mean() / abs(max_drawdown)
 

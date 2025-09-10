@@ -21,8 +21,7 @@ st.markdown(config.get("app.description"))
 
 # Sidebar
 st.sidebar.header("Stock Selection")
-default_symbol = config.get("data.default_symbol", "AAPL")
-symbol = st.sidebar.text_input("Enter Stock Symbol", default_symbol).upper()
+symbol = st.sidebar.text_input("Enter Stock Symbol").upper()
 
 # Date range selection
 col1, col2 = st.sidebar.columns(2)
@@ -87,6 +86,44 @@ if symbol:
             st.error(f"No data found for symbol {symbol}")
             
     except Exception as e:
-        st.error(f"Error fetching data: {str(e)}")
+        error_msg = str(e).lower()
+
+        # Provide specific error messages for different scenarios
+        if "rate limit" in error_msg or "too many requests" in error_msg:
+            st.error("🔄 **Rate Limit Exceeded**")
+            st.warning("""
+            Yahoo Finance API rate limit has been reached. This usually happens when:
+            - Too many requests are made in a short time
+            - Multiple users are accessing the service simultaneously
+
+            **What you can do:**
+            - Wait 5-10 minutes before trying again
+            - Try a different stock symbol
+            - Use cached data if available (try refreshing the page)
+
+            The application will automatically retry with exponential backoff, but if the limit persists,
+            please wait before making additional requests.
+            """)
+        elif "no data found" in error_msg:
+            st.warning(f"📊 **No Data Found** for symbol '{symbol}'")
+            st.info("""
+            This could mean:
+            - The stock symbol is incorrect or doesn't exist
+            - The stock is delisted or not available
+            - The market is closed
+
+            Please verify the stock symbol and try again.
+            """)
+        elif "network" in error_msg or "connection" in error_msg:
+            st.error("🌐 **Network Error**")
+            st.warning("""
+            Unable to connect to Yahoo Finance. Please check:
+            - Your internet connection
+            - Try again in a few minutes
+            - The service might be temporarily unavailable
+            """)
+        else:
+            st.error(f"❌ **Error**: {str(e)}")
+            st.info("If this error persists, please try again later or contact support.")
 else:
     st.info("Please enter a stock symbol to begin analysis") 

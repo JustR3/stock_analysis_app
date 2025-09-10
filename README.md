@@ -1,6 +1,6 @@
 # Stock Analysis App
 
-A Python application for stock market analysis, visualization, and prediction. The app provides tools for collecting, analyzing, and visualizing stock data, with a focus on single stock analysis. Now with a modern Streamlit web interface!
+A Python application for stock market analysis, visualization, and prediction. The app provides tools for collecting, analyzing, and visualizing stock data, with a focus on single stock analysis. Now with a modern Streamlit web interface that starts with empty stock symbol inputs, allowing users to analyze any stock of their choice!
 
 ## Features
 
@@ -93,6 +93,8 @@ export APP_ENV=prod
 streamlit run src/streamlit_app/Home.py
 ```
 
+**Getting Started**: The app opens with empty stock symbol input boxes. Simply enter any valid stock ticker symbol (e.g., AAPL, GOOGL, MSFT, TSLA) to begin analysis. The app supports both the main dashboard and technical analysis tabs.
+
 ### Basic Analysis (Python API)
 
 ```python
@@ -104,7 +106,7 @@ data_manager = StockDataManager()
 visualizer = StockVisualizer()
 
 # Get stock data (uses cache if available)
-data = data_manager.get_stock_data("AAPL")
+data = data_manager.get_stock_data("AAPL")  # Replace "AAPL" with any stock symbol
 
 # Generate plots
 visualizer.plot_price_and_moving_averages(data, "AAPL")
@@ -131,11 +133,13 @@ The app uses a flexible configuration system:
 
 ## Data Caching
 
-The app implements an efficient caching system:
-- Stock data is cached in Parquet format
-- Cache is valid for 1 day
-- Analysis parameters are pre-calculated and stored
-- Cache can be force-refreshed if needed
+The app implements a smart caching system to optimize API usage:
+- **Stock Data**: 4-hour cache during market hours, 24-hour cache outside market hours
+- **Stock Info**: 6-hour cache during market hours, 24-hour cache outside market hours
+- **Format**: Stock data cached in Parquet format for fast loading
+- **Analysis**: Technical indicators and analysis parameters are pre-calculated and stored
+- **Rate Limiting**: Built-in exponential backoff and retry mechanism for API rate limits
+- **Manual Refresh**: Cache can be force-refreshed when needed
 
 ## Contributing
 
@@ -151,14 +155,31 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Dependencies
 
-- pandas
-- numpy
-- yfinance
-- seaborn
-- matplotlib
-- scipy
-- streamlit
-- plotly
-- ta (Technical Analysis)
+**Core Dependencies:**
+- **pandas** (>=1.3.0) - Data manipulation and analysis
+- **numpy** (>=1.21.0) - Numerical computing
+- **yfinance** (>=0.1.70) - Yahoo Finance API integration
+- **streamlit** (>=1.24.0) - Web application framework
+- **plotly** (>=5.13.0) - Interactive charting
 
-See `requirements.txt` for specific versions. 
+**Data Science & ML:**
+- **scikit-learn** (>=0.24.2) - Machine learning algorithms
+- **tensorflow** (>=2.6.0) - Deep learning framework
+- **keras** (>=2.6.0) - Neural network API
+- **statsmodels** (>=0.12.2) - Statistical modeling
+
+**Visualization:**
+- **matplotlib** (>=3.4.2) - Static plotting
+- **seaborn** (>=0.11.1) - Statistical visualization
+
+**Technical Analysis:**
+- **ta** (>=0.7.0) - Technical analysis indicators
+
+**Utilities:**
+- **requests** (>=2.26.0) - HTTP requests
+- **beautifulsoup4** (>=4.9.3) - HTML parsing
+- **pyyaml** (>=6.0.1) - YAML configuration
+- **python-dotenv** (>=0.19.0) - Environment variables
+- **pytest** (>=6.2.5) - Testing framework
+
+See `requirements.txt` for complete list with specific versions. 
